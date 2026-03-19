@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AISA_Idea — Trip Analytics</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app">
+  <div th:replace="~{fragments :: sidebar('trips')}"></div>
+  <div class="main">
+    <div th:replace="~{fragments :: topbar('Trip Analytics', ${user})}"></div>
+    <div class="content">
+      <div class="pg-header"><h1>Trip Analytics 🗺️</h1><p>All your fuel logs and trip statistics</p></div>
+
+      <div th:if="${successMsg}" class="msg ok" th:text="${successMsg}" style="margin-bottom:14px"></div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card hi">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-label">Overall Mileage</div>
+          <div class="stat-val" th:text="${stats['avgMileage']} + ' km/L'">0 km/L</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🛣️</div>
+          <div class="stat-label">Est. Remaining Range</div>
+          <div class="stat-val" th:text="${stats['estimatedRange']} + ' km'">0 km</div>
+          <div class="stat-sub">at 3L remaining</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Cost per KM</div>
+          <div class="stat-val" th:text="'₹' + ${stats['costPerKm']}">₹0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          All Trips
+          <input type="text" id="trip-search" placeholder="Search date / road / traffic..."
+                 style="font-size:12px;padding:6px 12px;width:220px;text-transform:none;letter-spacing:0"
+                 oninput="filterTrips()"/>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Date</th><th>Distance</th><th>Fuel</th><th>Mileage</th>
+                <th>Speed</th><th>Cost</th><th>Road</th><th>Traffic</th>
+                <th>Vehicle</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="trips-body">
+              <tr th:if="${#lists.isEmpty(allLogs)}">
+                <td colspan="10" style="text-align:center;padding:32px;color:var(--dim)">
+                  No trips logged yet. <a th:href="@{/add}" style="color:var(--accent)">Add your first log →</a>
+                </td>
+              </tr>
+              <tr th:each="log : ${allLogs}">
+                <td th:text="${log.date}">--</td>
+                <td th:text="${log.distance} + ' km'">--</td>
+                <td th:text="${log.fuelLiters} + ' L'">--</td>
+                <td>
+                  <span th:class="'pill ' + (${log.mileage >= 40} ? 'good' : (${log.mileage >= 34} ? 'avg' : 'bad'))"
+                        th:text="${log.mileage} + ' km/L'">--</span>
+                </td>
+                <td th:text="${log.avgSpeed} + ' km/h'">--</td>
+                <td th:text="'₹' + ${log.totalCost}">--</td>
+                <td><span class="tag" th:text="${log.roadType}">--</span></td>
+                <td><span class="tag" th:text="${log.trafficLevel}">--</span></td>
+                <td style="font-size:11px;color:var(--muted)"
+                    th:text="${log.vehicleCompany != null ? log.vehicleCompany : ''} + ' ' + (${log.vehicleName != null ? log.vehicleName : ''})">--</td>
+                <td>
+                  <form th:action="@{/delete/{id}(id=${log.id})}" method="post" style="display:inline"
+                        onsubmit="return confirm('Delete this log?')">
+                    <button type="submit" style="background:none;border:1px solid var(--border);color:var(--danger);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10.5px;font-weight:600;transition:all .15s"
+                            onmouseover="this.style.background='rgba(239,68,68,0.1)'"
+                            onmouseout="this.style.background='none'">Del</button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<button class="chatbot-fab" id="chatbot-fab">🤖</button>
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chat-header">
+    <div class="chat-header-icon">🤖</div>
+    <div class="chat-header-info"><div class="chat-header-name">AISA_Vicky</div><div class="chat-header-sub">AI Bike Assistant</div></div>
+    <button class="chat-close" id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">📊 Viewing your trip analytics! Ask me anything about improving your mileage or reducing fuel costs.</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="Ask AISA_Vicky..." autocomplete="off"/>
+    <button class="chat-send" id="chat-send">➤</button>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

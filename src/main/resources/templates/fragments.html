@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!-- ── SIDEBAR FRAGMENT ── -->
+<aside th:fragment="sidebar(activePage)" class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⛽</div>
+    <span class="logo-text">AISA_<em>Idea</em></span>
+  </div>
+  <nav class="nav">
+    <span class="nav-section">Main</span>
+    <a th:href="@{/dashboard}"  th:classappend="${activePage == 'dashboard'}  ? ' active' : ''" class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+    <a th:href="@{/add}"        th:classappend="${activePage == 'add'}        ? ' active' : ''" class="nav-item"><span class="nav-icon">⛽</span>Add Fuel Log</a>
+    <a th:href="@{/trips}"      th:classappend="${activePage == 'trips'}      ? ' active' : ''" class="nav-item"><span class="nav-icon">🗺️</span>Trip Analytics</a>
+    <span class="nav-section">Analysis</span>
+    <a th:href="@{/engine}"     th:classappend="${activePage == 'engine'}     ? ' active' : ''" class="nav-item"><span class="nav-icon">🔩</span>Engine Health</a>
+    <a th:href="@{/statistics}" th:classappend="${activePage == 'statistics'} ? ' active' : ''" class="nav-item"><span class="nav-icon">📈</span>Statistics</a>
+    <a th:href="@{/servicing}"  th:classappend="${activePage == 'servicing'}  ? ' active' : ''" class="nav-item"><span class="nav-icon">🔧</span>Servicing<span class="nav-badge">AI</span></a>
+    <span class="nav-section">Account</span>
+    <a th:href="@{/profile}"    th:classappend="${activePage == 'profile'}    ? ' active' : ''" class="nav-item"><span class="nav-icon">👤</span>My Profile</a>
+    <a th:href="@{/logout}"     class="nav-item"><span class="nav-icon">🚪</span>Logout</a>
+  </nav>
+  <div class="db-pill"><span class="pulse"></span>DB Connected</div>
+</aside>
+
+<!-- ── TOPBAR FRAGMENT ── -->
+<div th:fragment="topbar(title, user)" class="topbar">
+  <span class="page-title" th:text="${title}">Page</span>
+  <span class="date-chip" id="dchip"></span>
+  <a th:href="@{/profile}" class="profile-btn">
+    <div th:if="${user.profileImageBase64 != null and !#strings.isEmpty(user.profileImageBase64)}">
+      <img th:src="${user.profileImageBase64}" class="profile-avatar" alt="avatar"/>
+    </div>
+    <div th:if="${user.profileImageBase64 == null or #strings.isEmpty(user.profileImageBase64)}"
+         class="profile-initials" th:text="${user.getInitials()}">U</div>
+    <div>
+      <div class="profile-name"  th:text="${user.fullName != null ? user.fullName : user.username}">Name</div>
+      <div class="profile-email" th:text="${user.email}">email</div>
+    </div>
+  </a>
+</div>
+
+</body>
+</html>

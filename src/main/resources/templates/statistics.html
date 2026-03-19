@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AISA_Idea — Statistics</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app">
+  <div th:replace="~{fragments :: sidebar('statistics')}"></div>
+  <div class="main">
+    <div th:replace="~{fragments :: topbar('Statistics', ${user})}"></div>
+    <div class="content">
+      <div class="pg-header"><h1>Statistics 📈</h1><p>Deep analytics and ML insights</p></div>
+
+      <div class="stats-grid">
+        <div class="stat-card hi">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Mean Mileage</div>
+          <div class="stat-val" th:text="${ai['meanMileage']} + ' km/L'">0 km/L</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-label">Best Mileage</div>
+          <div class="stat-val" style="background:linear-gradient(135deg,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent"
+               th:text="${stats['bestMileage']} + ' km/L'">0 km/L</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📉</div>
+          <div class="stat-label">Worst Mileage</div>
+          <div class="stat-val" style="background:linear-gradient(135deg,#ef4444,#f87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent"
+               th:text="${stats['worstMileage']} + ' km/L'">0 km/L</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-label">AI Predicted Next</div>
+          <div class="stat-val" th:text="${ai['predictedMileage']} + ' km/L'">0 km/L</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="card">
+          <div class="card-title">Core Metrics <span class="badge-purple">ML Stats</span></div>
+          <div class="stat-rows">
+            <div class="srow"><span>Variance</span><span th:text="${ai['variance']}">--</span></div>
+            <div class="srow"><span>Std Deviation</span><span th:text="${ai['stdDev']}">--</span></div>
+            <div class="srow"><span>Cost per KM</span><span th:text="'₹' + ${stats['costPerKm']}">--</span></div>
+            <div class="srow"><span>Total Distance</span><span th:text="${stats['totalDistance']} + ' km'">--</span></div>
+            <div class="srow"><span>Total Fuel Used</span><span th:text="${stats['totalFuel']} + ' L'">--</span></div>
+            <div class="srow"><span>Correlation (Speed↔Mileage)</span><span th:text="${ai['correlation']}">--</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Traffic Impact</div>
+          <div style="padding:4px 0">
+            <div class="traffic-item">
+              <div class="traffic-lbl">🟢 Low Traffic <span th:text="${stats['avgLow']} + ' km/L'"></span></div>
+              <div class="tbar-wrap"><div class="tbar g" id="tbar-l"></div></div>
+              <div class="tval" th:text="${stats['avgLow']} + ' km/L'">--</div>
+            </div>
+            <div class="traffic-item">
+              <div class="traffic-lbl">🟡 Medium Traffic <span th:text="${stats['avgMed']} + ' km/L'"></span></div>
+              <div class="tbar-wrap"><div class="tbar y" id="tbar-m"></div></div>
+              <div class="tval" th:text="${stats['avgMed']} + ' km/L'">--</div>
+            </div>
+            <div class="traffic-item">
+              <div class="traffic-lbl">🔴 High Traffic <span th:text="${stats['avgHigh']} + ' km/L'"></span></div>
+              <div class="tbar-wrap"><div class="tbar r" id="tbar-h"></div></div>
+              <div class="tval" th:text="${stats['avgHigh']} + ' km/L'">--</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Road Type Analysis</div>
+          <div class="stat-rows">
+            <div class="srow"><span>🏙️ City</span><span th:text="${stats['avgCity'] > 0} ? (${stats['avgCity']} + ' km/L') : '--'">--</span></div>
+            <div class="srow"><span>🛣️ Highway</span><span th:text="${stats['avgHighway'] > 0} ? (${stats['avgHighway']} + ' km/L') : '--'">--</span></div>
+            <div class="srow"><span>🔀 Mixed</span><span th:text="${stats['avgMixed'] > 0} ? (${stats['avgMixed']} + ' km/L') : '--'">--</span></div>
+            <div class="srow"><span>⛰️ Hilly</span><span th:text="${stats['avgHilly'] > 0} ? (${stats['avgHilly']} + ' km/L') : '--'">--</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Mileage Trend <span class="ai-badge">Live Chart</span></div>
+        <div class="chart-area"><canvas id="trend-chart"></canvas></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<button class="chatbot-fab" id="chatbot-fab">🤖</button>
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chat-header">
+    <div class="chat-header-icon">🤖</div>
+    <div class="chat-header-info"><div class="chat-header-name">AISA_Vicky</div><div class="chat-header-sub">AI Bike Assistant</div></div>
+    <button class="chat-close" id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">📈 Deep statistics loaded! I can explain any metric or help you improve your numbers.</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="Ask AISA_Vicky..." autocomplete="off"/>
+    <button class="chat-send" id="chat-send">➤</button>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+  animateTrafficBars([[${stats['avgLow']}]], [[${stats['avgMed']}]], [[${stats['avgHigh']}]]);
+  const logsRaw = [[${allLogs}]];
+  if (logsRaw && logsRaw.length >= 2) {
+    const rev = [...logsRaw].reverse();
+    drawTrendChart('trend-chart', rev.map(l => l.mileage), rev.map(l => String(l.date).slice(5)));
+  }
+</script>
+</body>
+</html>

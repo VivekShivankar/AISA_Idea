@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AISA_Idea — Servicing</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app">
+  <div th:replace="~{fragments :: sidebar('servicing')}"></div>
+  <div class="main">
+    <div th:replace="~{fragments :: topbar('Servicing Details & Prediction', ${user})}"></div>
+    <div class="content">
+      <div class="pg-header"><h1>Servicing Details &amp; AI Prediction 🔧</h1><p>Smart maintenance alerts powered by AI</p></div>
+
+      <div th:if="${successMsg}" class="msg ok" th:text="${successMsg}" style="margin-bottom:14px"></div>
+
+      <!-- AI Prediction Cards -->
+      <div class="stats-grid">
+        <div class="stat-card hi">
+          <div class="stat-icon">🔧</div>
+          <div class="stat-label">Service Condition</div>
+          <div class="stat-val" style="font-size:16px;padding-top:4px"
+               th:style="'font-size:16px;padding-top:4px;background:' + ${pred['healthColor']} + ';-webkit-background-clip:text;-webkit-text-fill-color:transparent'"
+               th:text="${pred['healthCondition']}">--</div>
+          <div class="stat-sub" style="margin-top:6px">
+            <span class="urgency-badge"
+                  th:classappend="${pred['urgency'] == 'OK'} ? ' urgency-ok' : (${pred['urgency'] == 'SCHEDULE'} ? ' urgency-schedule' : (${pred['urgency'] == 'URGENT'} ? ' urgency-urgent' : ' urgency-immediate'))"
+                  th:text="${pred['urgency']}">OK</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📍</div>
+          <div class="stat-label">KM Since Last Service</div>
+          <div class="stat-val" th:text="${pred['kmSince']} + ' km'">0 km</div>
+          <div class="stat-sub">Interval: 3,000 km</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-label">KM to Next Service</div>
+          <div class="stat-val" th:text="${pred['kmLeft']} + ' km'">0 km</div>
+          <div class="stat-sub" th:text="'At odometer: ' + ${pred['nextAt']} + ' km'">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Predicted Service Date</div>
+          <div class="stat-val" style="font-size:16px;padding-top:4px" th:text="${pred['predictedDate']}">--</div>
+          <div class="stat-sub">Based on avg 50 km/day</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Progress + Checklist -->
+        <div class="card wide">
+          <div class="card-title">Service Progress <span class="ai-badge">AI Tracked</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px">
+            <span>Last service: <strong th:text="${pred['lastOdo']} + ' km'">--</strong></span>
+            <span>Next service: <strong th:text="${pred['nextAt']} + ' km'">--</strong></span>
+          </div>
+          <div class="svc-progress-bar">
+            <div class="svc-progress-fill" id="svc-bar" style="width:0%"></div>
+          </div>
+          <div style="text-align:right;font-size:11.5px;color:var(--muted);margin-top:4px"
+               th:text="${pred['pct']} + '% of service interval used'">--</div>
+
+          <div style="margin-top:16px">
+            <div class="card-title" style="margin-bottom:10px">What to Check at Next Service</div>
+            <div class="svc-checklist">
+              <div class="svc-check-item" th:each="item : ${pred['checkList']}">
+                <span class="ci">✅</span>
+                <span th:text="${item}">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cost Prediction + Stats -->
+        <div class="card slim">
+          <div class="card-title">Cost Prediction <span class="badge-green">AI Est.</span></div>
+          <div style="font-size:36px;font-weight:800;color:var(--accent);margin:10px 0 4px;letter-spacing:-0.03em"
+               th:text="'₹' + ${pred['predictedCost']}">₹0</div>
+          <div style="font-size:11.5px;color:var(--muted)">Estimated next service cost</div>
+
+          <div style="margin-top:18px">
+            <div class="card-title">Service History Summary</div>
+            <div class="stat-rows">
+              <div class="srow"><span>Total Services Done</span><span th:text="${pred['svcCount']}">0</span></div>
+              <div class="srow"><span>Total Money Spent</span><span th:text="'₹' + ${pred['totalSvcCost']}">₹0</span></div>
+              <div class="srow"><span>Service Interval</span><span th:text="${pred['interval']} + ' km'">3000 km</span></div>
+              <div class="srow"><span>Last Service KM</span><span th:text="${pred['lastOdo']} + ' km'">0 km</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Service Record Form -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-title">+ Add New Service Record</div>
+        <form th:action="@{/servicing/save}" method="post">
+          <div class="form-grid">
+            <div class="form-group"><label>Service Date</label><input type="date" name="serviceDate"/></div>
+            <div class="form-group"><label>Odometer at Service (km)</label><input type="number" name="odometerAtService" placeholder="e.g. 15000" step="0.1"/></div>
+            <div class="form-group">
+              <label>Service Type</label>
+              <select name="serviceType">
+                <option value="Full Service">Full Service</option>
+                <option value="Oil Change">Oil Change Only</option>
+                <option value="Tyre Service">Tyre / Wheel Service</option>
+                <option value="Chain Service">Chain &amp; Sprocket</option>
+                <option value="Brake Service">Brake Service</option>
+                <option value="Battery Replace">Battery Replacement</option>
+                <option value="Spark Plug">Spark Plug Change</option>
+                <option value="Air Filter">Air Filter Service</option>
+                <option value="Electrical">Electrical Fix</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Serviced At (Workshop)</label><input type="text" name="servicedAt" placeholder="e.g. Hero Service Center"/></div>
+            <div class="form-group"><label>Service Cost (₹)</label><input type="number" name="serviceCost" placeholder="e.g. 850" step="0.01"/></div>
+            <div class="form-group">
+              <label>Status</label>
+              <select name="status">
+                <option value="Completed">✅ Completed</option>
+                <option value="Pending">⏳ Pending</option>
+                <option value="Upcoming">📅 Upcoming</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Vehicle Name</label><input type="text" name="vehicleName" placeholder="e.g. Splendor, Swift"/></div>
+            <div class="form-group"><label>Vehicle Company</label><input type="text" name="vehicleCompany" placeholder="e.g. Hero, Honda"/></div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px"><label>Parts Replaced</label><input type="text" name="partsReplaced" placeholder="e.g. Engine oil, Air filter, Brake pads"/></div>
+          <div class="form-group" style="margin-bottom:14px"><label>Technician Notes</label><input type="text" name="technicianNotes" placeholder="Any notes from technician..."/></div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">💾 Save Service Record</button>
+            <button type="reset" class="btn-secondary">Clear</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Past Service Records -->
+      <div class="card">
+        <div class="card-title">Past Servicing Records</div>
+        <div th:if="${#lists.isEmpty(records)}" style="text-align:center;padding:28px;color:var(--dim)">
+          No service records yet. Add your first service record above!
+        </div>
+        <div th:each="rec : ${records}" class="svc-record">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-weight:700;font-size:13.5px;margin-bottom:4px" th:text="${rec.serviceType}">--</div>
+              <div style="font-size:11.5px;color:var(--muted)">
+                📅 <span th:text="${rec.serviceDate}">--</span>
+                &nbsp;|&nbsp; 📍 <span th:text="${rec.odometerAtService} + ' km'">--</span>
+                <span th:if="${rec.servicedAt != null and !#strings.isEmpty(rec.servicedAt)}">
+                  &nbsp;|&nbsp; 🔧 <span th:text="${rec.servicedAt}">--</span>
+                </span>
+                <span th:if="${rec.vehicleName != null and !#strings.isEmpty(rec.vehicleName)}">
+                  &nbsp;|&nbsp; 🏍️ <span th:text="${rec.vehicleCompany} + ' ' + ${rec.vehicleName}">--</span>
+                </span>
+              </div>
+              <div th:if="${rec.partsReplaced != null and !#strings.isEmpty(rec.partsReplaced)}"
+                   style="font-size:11px;color:var(--dim);margin-top:4px">
+                Parts: <span th:text="${rec.partsReplaced}">--</span>
+              </div>
+              <div th:if="${rec.technicianNotes != null and !#strings.isEmpty(rec.technicianNotes)}"
+                   style="font-size:11px;color:var(--dim);margin-top:2px">
+                Notes: <span th:text="${rec.technicianNotes}">--</span>
+              </div>
+            </div>
+            <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+              <div style="font-size:18px;font-weight:800;color:var(--accent)" th:text="'₹' + ${rec.serviceCost}">₹0</div>
+              <span th:class="'pill ' + (${rec.status == 'Completed'} ? 'good' : (${rec.status == 'Pending'} ? 'avg' : 'bad'))"
+                    th:text="${rec.status}">--</span>
+              <form th:action="@{/service/delete/{id}(id=${rec.id})}" method="post"
+                    onsubmit="return confirm('Delete this record?')">
+                <button type="submit" style="background:none;border:1px solid var(--border);color:var(--danger);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10.5px;font-weight:600">Del</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<button class="chatbot-fab" id="chatbot-fab">🤖</button>
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chat-header">
+    <div class="chat-header-icon">🤖</div>
+    <div class="chat-header-info"><div class="chat-header-name">AISA_Vicky</div><div class="chat-header-sub">AI Bike Assistant</div></div>
+    <button class="chat-close" id="chat-close">✕</button>
+  </div>
+  <div class="chat-suggestions">
+    <button class="chat-sug">When to service?</button>
+    <button class="chat-sug">Oil change tips</button>
+    <button class="chat-sug">Service cost</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">🔧 I can predict your next service date, explain what needs checking, and give maintenance tips. What would you like to know?</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="Ask AISA_Vicky..." autocomplete="off"/>
+    <button class="chat-send" id="chat-send">➤</button>
+  </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+  const pct = [[${pred['pct']}]];
+  const hc  = [[${pred['healthColor']}]];
+  animateSvcBar('svc-bar', pct, hc);
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AISA_Idea — Dashboard</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div class="app">
+
+  <div th:replace="~{fragments :: sidebar('dashboard')}"></div>
+
+  <div class="main">
+    <div th:replace="~{fragments :: topbar('Dashboard', ${user})}"></div>
+
+    <div class="content">
+      <div class="pg-header">
+        <h1>Welcome back, <span th:text="${user.fullName != null ? user.fullName : user.username}">User</span> 👋</h1>
+        <p>Your AI-powered fuel intelligence summary</p>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card hi">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-label">Avg Mileage</div>
+          <div class="stat-val" th:text="${stats['avgMileage']} + ' km/L'">0 km/L</div>
+          <div class="stat-sub">All trips combined</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Total Cost</div>
+          <div class="stat-val" th:text="'₹' + ${stats['totalCost']}">₹0</div>
+          <div class="stat-sub">Fuel spending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🛣️</div>
+          <div class="stat-label">Total Distance</div>
+          <div class="stat-val" th:text="${stats['totalDistance']} + ' km'">0 km</div>
+          <div class="stat-sub">Total logged</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-label">Trips Logged</div>
+          <div class="stat-val" th:text="${stats['tripCount']}">0</div>
+          <div class="stat-sub">Fuel entries</div>
+        </div>
+      </div>
+
+      <!-- AI + Health + Score -->
+      <div class="row">
+        <div class="card wide">
+          <div class="card-title">AI Mileage Prediction <span class="ai-badge">ML Model</span></div>
+          <div class="pred-val" th:text="${ai['predictedMileage']} + ' km/L'">-- km/L</div>
+          <div class="pred-sub">Next trip predicted mileage</div>
+          <div class="tip" th:text="${ai['tip']}">--</div>
+        </div>
+        <div class="card slim">
+          <div class="card-title">Engine Health</div>
+          <div class="health-center">
+            <div class="health-icon"
+                 th:style="'color:' + ${ai['healthColor']}"
+                 th:text="${ai['healthStatus'] == 'Healthy'} ? '✔' : (${ai['healthStatus'] == 'Warning'} ? '⚠️' : '⚡')">✔</div>
+            <div class="health-status" th:style="'color:' + ${ai['healthColor']}" th:text="${ai['healthStatus']}">Healthy</div>
+            <div class="health-msg" th:text="${ai['healthMsg']}">Engine health looks normal.</div>
+          </div>
+        </div>
+        <div class="card slim">
+          <div class="card-title">Riding Score</div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 100 100">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   stop-color="#3b82f6"/>
+                  <stop offset="100%" stop-color="#a78bfa"/>
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="40" class="ring-bg"/>
+              <circle cx="50" cy="50" r="40" class="ring-fill" id="dash-ring"/>
+              <text x="50" y="55" text-anchor="middle" class="ring-num"
+                    style="transform:rotate(90deg);transform-origin:50% 50%"
+                    th:text="${ai['ridingScore']}">0</text>
+            </svg>
+            <span class="ring-lbl">out of 100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Servicing Summary Card -->
+      <div class="row">
+        <div class="card slim">
+          <div class="card-title">🔧 Servicing Status <span class="badge-green">AI Prediction</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <span class="urgency-badge"
+                  th:classappend="${svcPred['urgency'] == 'OK'} ? ' urgency-ok' : (${svcPred['urgency'] == 'SCHEDULE'} ? ' urgency-schedule' : (${svcPred['urgency'] == 'URGENT'} ? ' urgency-urgent' : ' urgency-immediate'))"
+                  th:text="${svcPred['urgency']}">OK</span>
+            <span style="font-size:12px;color:var(--muted)" th:text="${svcPred['healthCondition']}">Good</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+            KM since last service: <span style="font-weight:700;color:var(--text)" th:text="${svcPred['kmSince']} + ' km'">0 km</span>
+          </div>
+          <div class="svc-progress-bar">
+            <div class="svc-progress-fill" id="svc-dash-bar" style="width:0%"></div>
+          </div>
+          <div style="font-size:11px;color:var(--dim);margin-top:4px">
+            Next service at: <span style="color:var(--accent)" th:text="${svcPred['nextAt']} + ' km'">--</span>
+          </div>
+          <a th:href="@{/servicing}" style="display:block;margin-top:12px;text-align:center;font-size:12px;color:var(--accent);font-weight:600;text-decoration:none;padding:8px;background:var(--glow);border-radius:8px;border:1px solid rgba(59,130,246,0.2)">View Full Servicing Details →</a>
+        </div>
+
+        <div class="card slim">
+          <div class="card-title">⚡ Quick Stats</div>
+          <div class="stat-rows">
+            <div class="srow"><span>Best Mileage</span><span class="text-green" th:text="${stats['bestMileage']} + ' km/L'">--</span></div>
+            <div class="srow"><span>Worst Mileage</span><span class="text-danger" th:text="${stats['worstMileage']} + ' km/L'">--</span></div>
+            <div class="srow"><span>Cost per KM</span><span th:text="'₹' + ${stats['costPerKm']}">--</span></div>
+            <div class="srow"><span>Est. Range (3L)</span><span class="text-accent" th:text="${stats['estimatedRange']} + ' km'">--</span></div>
+            <div class="srow"><span>Total Fuel</span><span th:text="${stats['totalFuel']} + ' L'">--</span></div>
+          </div>
+        </div>
+
+        <div class="card slim">
+          <div class="card-title">📍 Latest Odometer</div>
+          <div style="font-size:36px;font-weight:800;color:var(--accent);margin:12px 0 4px;letter-spacing:-0.03em" th:text="${stats['latestOdo']} + ' km'">0 km</div>
+          <div style="font-size:11px;color:var(--muted)">Current recorded odometer reading</div>
+          <div style="margin-top:14px;font-size:12px;color:var(--muted)">Z-Score Anomaly:
+            <span style="font-weight:700" th:text="${ai['zScore']}">0</span>
+            <span th:if="${ai['zScore'] < -2}" class="text-danger" style="font-size:10px;margin-left:4px">⚠ Anomaly</span>
+            <span th:if="${ai['zScore'] >= -2}" class="text-green" style="font-size:10px;margin-left:4px">✔ Normal</span>
+          </div>
+          <a th:href="@{/add}" style="display:block;margin-top:14px;text-align:center;font-size:12.5px;font-weight:700;color:#fff;text-decoration:none;padding:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;">+ Add Fuel Log</a>
+        </div>
+      </div>
+
+      <!-- Recent Trips -->
+      <div class="card">
+        <div class="card-title">Recent Trips
+          <a th:href="@{/trips}" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:600;text-transform:none;letter-spacing:0">View all →</a>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Date</th><th>Distance</th><th>Fuel</th><th>Mileage</th><th>Cost</th><th>Road</th></tr></thead>
+            <tbody>
+              <tr th:if="${#lists.isEmpty(recentLogs)}">
+                <td colspan="6" style="text-align:center;padding:28px;color:var(--dim)">
+                  No trips yet. <a th:href="@{/add}" style="color:var(--accent)">Add your first fuel log →</a>
+                </td>
+              </tr>
+              <tr th:each="log : ${recentLogs}">
+                <td th:text="${log.date}">--</td>
+                <td th:text="${log.distance} + ' km'">--</td>
+                <td th:text="${log.fuelLiters} + ' L'">--</td>
+                <td><span th:class="'pill ' + (${log.mileage >= 40} ? 'good' : (${log.mileage >= 34} ? 'avg' : 'bad'))"
+                          th:text="${log.mileage} + ' km/L'">--</span></td>
+                <td th:text="'₹' + ${log.totalCost}">--</td>
+                <td><span class="tag" th:text="${log.roadType}">--</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- content -->
+  </div><!-- main -->
+</div><!-- app -->
+
+<div class="toast" id="toast"></div>
+<button class="chatbot-fab" id="chatbot-fab" title="Chat with AISA_Vicky">🤖</button>
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chat-header">
+    <div class="chat-header-icon">🤖</div>
+    <div class="chat-header-info">
+      <div class="chat-header-name">AISA_Vicky</div>
+      <div class="chat-header-sub">AI Bike Assistant · Always Online</div>
+    </div>
+    <button class="chat-close" id="chat-close">✕</button>
+  </div>
+  <div class="chat-suggestions">
+    <button class="chat-sug">Improve mileage</button>
+    <button class="chat-sug">Servicing tips</button>
+    <button class="chat-sug">Engine health</button>
+    <button class="chat-sug">Tyre care</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">👋 Hi! I'm AISA_Vicky, your AI bike assistant. Ask me anything about fuel efficiency, servicing, engine health, or your AISA dashboard!</div>
+  </div>
+  <div class="chat-input-row">
+    <input class="chat-input" id="chat-input" placeholder="Ask AISA_Vicky..." autocomplete="off"/>
+    <button class="chat-send" id="chat-send">➤</button>
+  </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+  const ridingScore = [[${ai['ridingScore']}]];
+  const svcPct      = [[${svcPred['pct']}]];
+  const svcColor    = [[${svcPred['healthColor']}]];
+  animateRing('dash-ring', ridingScore);
+  animateSvcBar('svc-dash-bar', svcPct, svcColor);
+</script>
+</body>
+</html>

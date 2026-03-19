@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AISA_Idea — Login</title>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body style="overflow:auto;">
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">⛽</div>
+      <span class="auth-logo-text">AISA_<em>Idea</em></span>
+    </div>
+    <h2 class="auth-title">Welcome back 👋</h2>
+    <p class="auth-sub">Sign in to your smart fuel dashboard</p>
+
+    <div th:if="${error}" class="auth-alert err" th:text="${error}"></div>
+    <div th:if="${msg}"   class="auth-alert ok"  th:text="${msg}"></div>
+
+    <form th:action="@{/login}" method="post">
+      <div class="auth-group">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Enter your username" required autofocus/>
+      </div>
+      <div class="auth-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required/>
+      </div>
+      <button type="submit" class="auth-btn">🚀 Sign In</button>
+    </form>
+
+    <div class="auth-link">Don't have an account? <a th:href="@{/register}">Create one free →</a></div>
+
+    <div style="margin-top:24px;padding:14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.7;">
+      <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">🤖 AISA_Idea Features</div>
+      ✅ AI Mileage Prediction &nbsp;|&nbsp; 🔧 Smart Servicing Alerts<br/>
+      📊 Engine Health Analytics &nbsp;|&nbsp; 💬 AISA_Vicky AI Chatbot<br/>
+      🚗 Multi-Vehicle Support &nbsp;|&nbsp; 📈 Deep Statistics
+    </div>
+  </div>
+</div>
+</body>
+</html>
